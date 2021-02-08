@@ -2,10 +2,12 @@
 
 namespace Osiset\ShopifyApp\Test\Actions;
 
+use Osiset\ShopifyApp\Test\TestCase;
+use Illuminate\Support\Facades\Config;
 use Osiset\ShopifyApp\Actions\AuthorizeShop;
+use Osiset\ShopifyApp\Objects\Enums\AuthMode;
 use Osiset\ShopifyApp\Objects\Values\ShopDomain;
 use Osiset\ShopifyApp\Test\Stubs\Api as ApiStub;
-use Osiset\ShopifyApp\Test\TestCase;
 
 class AuthorizeShopTest extends TestCase
 {
@@ -104,5 +106,43 @@ class AuthorizeShopTest extends TestCase
 
         $this->assertTrue($result->completed);
         $this->assertNotSame($currentToken->toNative(), $shop->getToken()->toNative());
+    }
+
+    public function testPerUserAndOffline(): void
+    {
+        // Setup API stub
+        $this->setApiStub();
+        ApiStub::stubResponses(['access_token', 'access_token']);
+
+        // Set as per-user
+        Config::set('shopify-app.api_grant_mode', AuthMode::PERUSER()->toNative());
+
+        // Create the shop
+        $shop = factory($this->model)->create([
+            'password' => '',
+        ]);
+
+        /**
+         * TEST ONE: Since no offline token, offline mode should be used
+         */
+        $result = call_user_func(
+            $this->action,
+            $shop->getDomain(),
+            null
+        );
+        $this->assertStringNotContainsString('grant_options', $result->url);
+
+        /**
+         * TEST TWO: A second auth pass should use per-user since we have an offline token now
+         */
+        $shop->password = 'abc123';
+        $shop->save();
+
+        $result = call_user_func(
+            $this->action,
+            $shop->getDomain(),
+            null
+        );
+        $this->assertStringContainsString('grant_options', $result->url);
     }
 }
