@@ -2,12 +2,12 @@
 
 namespace Osiset\ShopifyApp\Test\Actions;
 
-use Osiset\ShopifyApp\Test\TestCase;
 use Illuminate\Support\Facades\Config;
 use Osiset\ShopifyApp\Actions\AuthorizeShop;
 use Osiset\ShopifyApp\Objects\Enums\AuthMode;
 use Osiset\ShopifyApp\Objects\Values\ShopDomain;
 use Osiset\ShopifyApp\Test\Stubs\Api as ApiStub;
+use Osiset\ShopifyApp\Test\TestCase;
 
 class AuthorizeShopTest extends TestCase
 {
@@ -123,7 +123,7 @@ class AuthorizeShopTest extends TestCase
         ]);
 
         /**
-         * TEST ONE: Since no offline token, offline mode should be used
+         * TEST ONE: Since no offline token, offline mode should be used.
          */
         $result = call_user_func(
             $this->action,
@@ -133,7 +133,7 @@ class AuthorizeShopTest extends TestCase
         $this->assertStringNotContainsString('grant_options', $result->url);
 
         /**
-         * TEST TWO: A second auth pass should use per-user since we have an offline token now
+         * TEST TWO: A second auth pass should use per-user since we have an offline token now.
          */
         $shop->password = 'abc123';
         $shop->save();
